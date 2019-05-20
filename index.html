@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://unpkg.com/vue"> </script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css">
+</head>
+
+<body>
+    <div id="navcard" class="flex bg-white shadow-xl" v-bind:class="[
+        iscard ? 'max-w-sm': '',
+        iscard ? 'mx-auto': '',
+        iscard ? 'rounded-lg': '',
+        iscard ? 'mt-40': '',
+        iscard ? 'p-6' : 'p-2']">
+        <div v-bind:class="[
+            iscard ? 'mx-auto' : 'w-full',
+            iscard ? 'text-center': '']">
+            <img v-bind:class="[
+                iscard  ? 'h-24' : 'h-8',
+                iscard  ? 'w-24' : 'w-8',
+                !iscard ? 'inline-block' : '']" src="/static/img/gopher.png" alt="Gamer Gopher">
+            <button id="fetch" v-if="iscard" v-on:click="fetch"
+                class="bg-blue-500 hover:bg-blue-700 rounded text-white font-bold mt-3 px-2 py-1">추첨 시작!</button>
+            <button id="start" v-if="!iscard" v-on:click="lotto"
+                class="float-right bg-blue-500 hover:bg-blue-700 rounded text-white font-bold px-2 py-1">Pick!</button>
+            <input id="count" v-if="!iscard" v-model:value="shared.count"
+                class="w-20 float-right shadow border rounded text-right leading-snug px-3 py-1 mr-2">
+        </div>
+    </div>
+    <ul id="members">
+        <li v-for="(member, index) in shared.attendees" class="flex float-left xl:w-1/12 lg:w-1/6">
+            <div class="w-full p-2 pt-1 m-2 shadow-xl" v-bind:class="{'bg-indigo-400': member.won || member.picked}">
+                <button v-on:click="exclude(index)" class="rounded bg-red-600 text-center text-white text-xs mb-3 px-1">
+                    <i class="fas fa-times"></i>
+                </button>
+                <img class="mx-auto rounded w-20 h-20"
+                    v-bind:src="member.photo.photo_link ? member.photo.photo_link : '/static/img/gopher.png'" />
+                <p class="text-center text-xs pt-3">{{ member.name | truncate(12) }}</p>
+            </div>
+        </li>
+    </ul>
+    <script src=" static/app.js"> </script>
+</body>
+
+</html>
