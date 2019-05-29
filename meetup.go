@@ -57,7 +57,7 @@ type SimpleMember struct {
 }
 
 const (
-	endpoint = "http://api.meetup.com/Seoul-Go-Meetup"
+	endpoint = "http://api.meetup.com/GDG-Golang-Korea"
 )
 
 func buildURL(path string) string {
