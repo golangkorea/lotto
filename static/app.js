@@ -23,7 +23,7 @@ new Vue({
                     this.iscard = false
                 })
                 .catch(error => {
-                    console.log(error)
+                    alert(error.response.data.message)
                 })
         },
         lotto: function () {

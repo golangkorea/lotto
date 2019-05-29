@@ -39,7 +39,7 @@ func GetEventHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		b, _ = json.Marshal(map[string]string{
-			"message": "could not find event",
+			"message": err.Error(),
 		})
 		w.Write(b)
 		return
@@ -48,7 +48,7 @@ func GetEventHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		b, _ = json.Marshal(map[string]string{
-			"message": "could not getting a member list",
+			"message": err.Error(),
 		})
 		w.Write(b)
 		return
@@ -57,7 +57,7 @@ func GetEventHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		b, _ = json.Marshal(map[string]string{
-			"message": "could not getting a member list",
+			"message": err.Error(),
 		})
 		w.Write(b)
 		return
