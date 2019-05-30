@@ -36,8 +36,10 @@
                 <button v-on:click="exclude(index)" class="rounded bg-red-600 text-center text-white text-xs mb-3 px-1">
                     <i class="fas fa-times"></i>
                 </button>
-                <img class="mx-auto rounded w-20 h-20"
-                    v-bind:src="member.photo.photo_link ? member.photo.photo_link : '/static/img/gopher.png'" />
+                <a v-bind:href="'https://www.meetup.com/GDG-Golang-Korea/members/' + member.id + '/profile/'" target="_blank">
+                    <img class="mx-auto rounded w-20 h-20"
+                      v-bind:src="member.photo.photo_link ? member.photo.photo_link : '/static/img/gopher.png'" />
+                </a>
                 <p class="text-center text-xs pt-3">{{ member.name | truncate(12) }}</p>
             </div>
         </li>
