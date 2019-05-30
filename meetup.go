@@ -50,10 +50,7 @@ type SimpleMember struct {
 			PhotoLink string `json:"photo_link"`
 		} `json:"photo"`
 	} `json:"member"`
-	RSVP struct {
-		ID       int    `json:"id"`
-		Response string `json:"response"`
-	} `json:"rsvp"`
+	Response string `json:"response"`
 }
 
 const (
@@ -98,7 +95,7 @@ func GetLatestEvent() (*SimpleEvent, error) {
 
 // GetOKRsvpMembers get a list of confirmed members of an event
 func GetOKRsvpMembers(id string) ([]SimpleMember, error) {
-	url := buildURL(fmt.Sprintf("/events/%s/attendance", id))
+	url := buildURL(fmt.Sprintf("/events/%s/rsvps", id))
 	b, err := request(url)
 	if err != nil {
 		return nil, err
@@ -113,7 +110,7 @@ func GetOKRsvpMembers(id string) ([]SimpleMember, error) {
 	}
 	var okMembers []SimpleMember
 	for _, m := range members {
-		if m.RSVP.Response == "yes" {
+		if m.Response == "yes" {
 			okMembers = append(okMembers, m)
 		}
 	}
