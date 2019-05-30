@@ -50,7 +50,7 @@ new Vue({
                     }
                     setTimeout(function (i) {
                         self.shared.attendees[i % len].won = true
-                    }, 15, i)
+                    }, 10, i)
                     break
                 }
                 this.shared.count -= 1
