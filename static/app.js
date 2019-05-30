@@ -39,7 +39,7 @@ new Vue({
                         if (i > 0) {
                             self.shared.attendees[(i - 1) % len].picked = false;
                         }
-                    }, 10, i)
+                    }, 12, i)
                     if (i < cnt - 1) {
                         continue
                     }
