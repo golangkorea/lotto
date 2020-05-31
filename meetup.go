@@ -57,25 +57,17 @@ const (
 	endpoint = "http://api.meetup.com/GDG-Golang-Korea"
 )
 
-func meetupBuildURL(path string) string {
-	return endpoint + path
-}
-
-func meetupRequest(url string) ([]byte, error) {
-	resp, err := http.Get(url)
+// MeetupResvMembersOfLastEvent returns list of confirmed members of last event
+func MeetupResvMembersOfLastEvent() ([]MeetupMember, error) {
+	evt, err := meetupGetLatestEvent()
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	return b, nil
+	return meetupGetOKRsvpMembers(evt.ID)
 }
 
-// GetLatestEvent get a latest event information
-func GetLatestEvent() (*MeetupEvent, error) {
+// meetupGetLatestEvent get a latest event information
+func meetupGetLatestEvent() (*MeetupEvent, error) {
 	url := meetupBuildURL("/events?status=past,upcoming&desc=true&page=1")
 	b, err := meetupRequest(url)
 	if err != nil {
@@ -93,8 +85,8 @@ func GetLatestEvent() (*MeetupEvent, error) {
 	return &events[0], nil
 }
 
-// GetOKRsvpMembers get a list of confirmed members of an event
-func GetOKRsvpMembers(id string) ([]MeetupMember, error) {
+// meetupGetOKRsvpMembers get a list of confirmed members of an event
+func meetupGetOKRsvpMembers(id string) ([]MeetupMember, error) {
 	url := meetupBuildURL(fmt.Sprintf("/events/%s/rsvps", id))
 	b, err := meetupRequest(url)
 	if err != nil {
@@ -115,4 +107,21 @@ func GetOKRsvpMembers(id string) ([]MeetupMember, error) {
 		}
 	}
 	return okMembers, nil
+}
+
+func meetupRequest(url string) ([]byte, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
+func meetupBuildURL(path string) string {
+	return endpoint + path
 }

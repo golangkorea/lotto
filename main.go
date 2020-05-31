@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	port = "8000"
+	port string
 )
 
 func init() {
@@ -52,13 +52,7 @@ func GetEventHandler(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 
-	event, err := GetLatestEvent()
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		writeErrAsJSON(w, err)
-		return
-	}
-	members, err := GetOKRsvpMembers(event.ID)
+	members, err := MeetupResvMembersOfLastEvent()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		writeErrAsJSON(w, err)
