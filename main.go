@@ -3,9 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
+	"os"
 )
 
 const port = "8000"
@@ -23,44 +24,39 @@ func main() {
 
 // IndexView render the index template
 func IndexView(w http.ResponseWriter, r *http.Request) {
-	b, err := ioutil.ReadFile("index.html")
+	w.Header().Set("content-type", "text/html; charset=utf-8")
+	f, err := os.Open("index.html")
 	if err != nil {
 		panic(err)
 	}
-	w.Header().Set("content-type", "text/html; charset=utf-8")
-	w.Write(b)
+	io.Copy(w, f)
 }
 
 // GetEventHandler return the latest event and attendance info as json
 func GetEventHandler(w http.ResponseWriter, r *http.Request) {
-	var b []byte
 	w.Header().Set("content-type", "application/json")
 	event, err := GetLatestEvent()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		b, _ = json.Marshal(map[string]string{
+		json.NewEncoder(w).Encode(map[string]string{
 			"message": err.Error(),
 		})
-		w.Write(b)
 		return
 	}
 	members, err := GetOKRsvpMembers(event.ID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		b, _ = json.Marshal(map[string]string{
+		json.NewEncoder(w).Encode(map[string]string{
 			"message": err.Error(),
 		})
-		w.Write(b)
 		return
 	}
-	b, err = json.Marshal(members)
+	err = json.NewEncoder(w).Encode(members)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		b, _ = json.Marshal(map[string]string{
+		json.NewEncoder(w).Encode(map[string]string{
 			"message": err.Error(),
 		})
-		w.Write(b)
 		return
 	}
-	w.Write(b)
 }
