@@ -2,15 +2,25 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
+	"os"
 )
 
-const port = "8000"
+var (
+	port string
+)
+
+func init() {
+	flag.StringVar(&port, "-p", "8000", "listen port")
+}
 
 func main() {
+	flag.Parse()
+
 	http.HandleFunc("/", IndexView)
 	http.HandleFunc("/event", GetEventHandler)
 
@@ -23,44 +33,42 @@ func main() {
 
 // IndexView render the index template
 func IndexView(w http.ResponseWriter, r *http.Request) {
-	b, err := ioutil.ReadFile("index.html")
-	if err != nil {
-		panic(err)
-	}
 	w.Header().Set("content-type", "text/html; charset=utf-8")
-	w.Write(b)
+	f, err := os.Open("index.html")
+	chk(err)
+	defer f.Close()
+	io.Copy(w, f)
 }
 
 // GetEventHandler return the latest event and attendance info as json
 func GetEventHandler(w http.ResponseWriter, r *http.Request) {
-	var b []byte
 	w.Header().Set("content-type", "application/json")
-	event, err := GetLatestEvent()
+	writeErrAsJSON := func(w io.Writer, err error) {
+		chk(
+			json.NewEncoder(w).Encode(
+				map[string]string{
+					"message": err.Error(),
+				},
+			),
+		)
+	}
+
+	members, err := MeetupResvMembersOfLastEvent()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		b, _ = json.Marshal(map[string]string{
-			"message": err.Error(),
-		})
-		w.Write(b)
+		writeErrAsJSON(w, err)
 		return
 	}
-	members, err := GetOKRsvpMembers(event.ID)
+	err = json.NewEncoder(w).Encode(members)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		b, _ = json.Marshal(map[string]string{
-			"message": err.Error(),
-		})
-		w.Write(b)
+		writeErrAsJSON(w, err)
 		return
 	}
-	b, err = json.Marshal(members)
+}
+
+func chk(err error) {
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		b, _ = json.Marshal(map[string]string{
-			"message": err.Error(),
-		})
-		w.Write(b)
-		return
+		panic(err)
 	}
-	w.Write(b)
 }

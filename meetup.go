@@ -8,22 +8,22 @@ import (
 	"strings"
 )
 
-// APIError represents an error of meetup API
-type APIError struct {
+// MeetupError represents an error of meetup API
+type MeetupError struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
 }
 
-func (e APIError) Error() string {
+func (e MeetupError) Error() string {
 	return e.Message
 }
 
-// APIErrors contains a list of APIErrors
-type APIErrors struct {
-	Errors []APIError `json:"errors"`
+// MeetupErrors contains a list of MeetupErrors
+type MeetupErrors struct {
+	Errors []MeetupError `json:"errors"`
 }
 
-func (e APIErrors) Error() string {
+func (e MeetupErrors) Error() string {
 	errs := make([]string, 0)
 	for _, err := range e.Errors {
 		errs = append(errs, err.Error())
@@ -31,8 +31,8 @@ func (e APIErrors) Error() string {
 	return strings.Join(errs, " + ")
 }
 
-// SimpleEvent represents an event with minimal info
-type SimpleEvent struct {
+// MeetupEvent represents an event with minimal info
+type MeetupEvent struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	LocalDate   string `json:"local_date"`
@@ -40,8 +40,8 @@ type SimpleEvent struct {
 	OKRsvpCount int    `json:"yes_rsvp_count"`
 }
 
-// SimpleMember represents a member with minimal info
-type SimpleMember struct {
+// MeetupMember represents a member with minimal info
+type MeetupMember struct {
 	Member struct {
 		ID    int    `json:"id"`
 		Name  string `json:"name"`
@@ -57,11 +57,59 @@ const (
 	endpoint = "http://api.meetup.com/GDG-Golang-Korea"
 )
 
-func buildURL(path string) string {
-	return endpoint + path
+// MeetupResvMembersOfLastEvent returns list of confirmed members of last event
+func MeetupResvMembersOfLastEvent() ([]MeetupMember, error) {
+	evt, err := meetupGetLatestEvent()
+	if err != nil {
+		return nil, err
+	}
+	return meetupGetOKRsvpMembers(evt.ID)
 }
 
-func request(url string) ([]byte, error) {
+// meetupGetLatestEvent get a latest event information
+func meetupGetLatestEvent() (*MeetupEvent, error) {
+	url := meetupBuildURL("/events?status=past,upcoming&desc=true&page=1")
+	b, err := meetupRequest(url)
+	if err != nil {
+		return nil, err
+	}
+	var events []MeetupEvent
+	err = json.Unmarshal(b, &events)
+	if err := json.Unmarshal(b, &events); err != nil {
+		var aerr MeetupErrors
+		if err := json.Unmarshal(b, &aerr); err == nil {
+			return nil, aerr
+		}
+		return nil, err
+	}
+	return &events[0], nil
+}
+
+// meetupGetOKRsvpMembers get a list of confirmed members of an event
+func meetupGetOKRsvpMembers(id string) ([]MeetupMember, error) {
+	url := meetupBuildURL(fmt.Sprintf("/events/%s/rsvps", id))
+	b, err := meetupRequest(url)
+	if err != nil {
+		return nil, err
+	}
+	var members []MeetupMember
+	if err := json.Unmarshal(b, &members); err != nil {
+		var aerr MeetupErrors
+		if err := json.Unmarshal(b, &aerr); err == nil {
+			return nil, aerr
+		}
+		return nil, err
+	}
+	var okMembers []MeetupMember
+	for _, m := range members {
+		if m.Response == "yes" {
+			okMembers = append(okMembers, m)
+		}
+	}
+	return okMembers, nil
+}
+
+func meetupRequest(url string) ([]byte, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -74,45 +122,6 @@ func request(url string) ([]byte, error) {
 	return b, nil
 }
 
-// GetLatestEvent get a latest event information
-func GetLatestEvent() (*SimpleEvent, error) {
-	url := buildURL("/events?status=past,upcoming&desc=true&page=1")
-	b, err := request(url)
-	if err != nil {
-		return nil, err
-	}
-	var events []SimpleEvent
-	err = json.Unmarshal(b, &events)
-	if err := json.Unmarshal(b, &events); err != nil {
-		var aerr APIErrors
-		if err := json.Unmarshal(b, &aerr); err == nil {
-			return nil, aerr
-		}
-		return nil, err
-	}
-	return &events[0], nil
-}
-
-// GetOKRsvpMembers get a list of confirmed members of an event
-func GetOKRsvpMembers(id string) ([]SimpleMember, error) {
-	url := buildURL(fmt.Sprintf("/events/%s/rsvps", id))
-	b, err := request(url)
-	if err != nil {
-		return nil, err
-	}
-	var members []SimpleMember
-	if err := json.Unmarshal(b, &members); err != nil {
-		var aerr APIErrors
-		if err := json.Unmarshal(b, &aerr); err == nil {
-			return nil, aerr
-		}
-		return nil, err
-	}
-	var okMembers []SimpleMember
-	for _, m := range members {
-		if m.Response == "yes" {
-			okMembers = append(okMembers, m)
-		}
-	}
-	return okMembers, nil
+func meetupBuildURL(path string) string {
+	return endpoint + path
 }
